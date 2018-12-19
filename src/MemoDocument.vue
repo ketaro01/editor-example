@@ -1,15 +1,5 @@
 <template>
   <div>
-    <div style="white-space: pre-wrap;" id="main-content">
-      <p>동해물과 백두산이 마르고 닳도록</p>
-      <p>하느님이 보우하사 우리나라 만세</p>
-      <ul>
-        <li>동해물과 백두산이 마르고 닳도록</li>
-        <li>하느님이 보우하사 우리나라 만세</li>
-        <li>동해물과 백두산이 마르고 닳도록</li>
-        <li>하느님이 보우하사 우리나라 만세</li>
-      </ul>
-    </div>
     <div id="main-content2" v-html="!content ? content_original : content">
       <p>동해물과 백두산이 마르고 닳도록</p>
       <p>하느님이 보우하사 우리나라 만세</p>
@@ -36,14 +26,11 @@
       <button @click="desirialize">저장</button>
       <button @click="closeComment">닫기</button>
     </div>
-    <br>
-    <br>
-    <div>{{ content }}</div>
-    <br>
     <div class="memoBox" v-if="selectedComment">
       <span>선택문장 : {{ selectedComment.sentence }}</span>
       <br>
       <span>메모 : {{ selectedComment.comment }}</span>
+      <button @click="removeComment(selectedComment.key)">삭제</button>
     </div>
   </div>
 </template>
@@ -70,7 +57,16 @@ export default {
   },
   mounted() {
     api.get("/memo").then(response => {
-      this.content_original = `<p>동해물과 백두산이 마르고 닳도록</p>
+      this.content_original = `
+      <p>동해물과 백두산이 마르고 닳도록</p>
+      <p>하느님이 보우하사 우리나라 만세</p>
+      <ul>
+        <li>동해물과 백두산이 마르고 닳도록</li>
+        <li>하느님이 보우하사 우리나라 만세</li>
+        <li>동해물과 백두산이 마르고 닳도록</li>
+        <li>하느님이 보우하사 우리나라 만세</li>
+      </ul>      
+      <p>동해물과 백두산이 마르고 닳도록</p>
       <p>하느님이 보우하사 우리나라 만세</p>
       <ul>
         <li>동해물과 백두산이 마르고 닳도록</li>
@@ -140,6 +136,14 @@ export default {
       this.useComment = false;
       this.reset();
     },
+    removeComment(key) {
+      const container = document.querySelector("#main-content2");
+      const els = container.querySelectorAll(`span[data-ref='${key}']`);
+      for (let i = 0; i < els.length; i++) {
+        const textNode = document.createTextNode(els[i].textContent);
+        els[i].parentNode.replaceChild(textNode, els[i]);
+      }
+    },
     eventBind() {
       const container = document.querySelector("#main-content2");
       const els = container.querySelectorAll(".inline-comment-marker");
@@ -155,7 +159,10 @@ export default {
     },
     clickHiglight(key) {
       if (this.comments[key]) {
-        this.selectedComment = this.comments[key];
+        this.selectedComment = {
+          key,
+          ...this.comments[key]
+        };
       }
     },
     reset() {

@@ -4,6 +4,7 @@ const getItem = key =>
 const setItem = (key, value) =>
   localStorage.setItem(key, JSON.stringify(value));
 
+// 비동기처리 테스트
 const api = {
   get: url => {
     const key = url.slice(1);
