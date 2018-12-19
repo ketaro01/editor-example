@@ -10,7 +10,7 @@
         <li>하느님이 보우하사 우리나라 만세</li>
       </ul>
     </div>
-    <div id="main-content2">
+    <div id="main-content2" v-html="!content ? content_original : content">
       <p>동해물과 백두산이 마르고 닳도록</p>
       <p>하느님이 보우하사 우리나라 만세</p>
       <ul>
@@ -26,23 +26,31 @@
       v-if="position && isSelect"
       :style="`background-color:#eee;border:1px solid #000; width: ${position.boxWidth}px; height: ${position.boxHeight}px; position: absolute; top: ${position.top}px; left: ${position.left}px;z-index:400`"
     >
-      <button @click="saveComment(content, selectRange, selectText)">COMMENT</button>
+      <button @click="openComment(selectRange, selectText)">COMMENT</button>
       <br>
       <button>ISSUE</button>
     </div>
-    <div
-      v-if="useComment"
-      style="background-color:#eee;border:1px solid #000;width:400px; height:400px;position:absolute;right:0px;top:100px;"
-    >
+    <div v-if="useComment" class="commentBox">
       {{ selectText }}
-      <textarea v-model="content" style="width:100%;height: 80%;"/>
+      <textarea v-model="comment" style="width:100%;height: 80%;"/>
       <button @click="desirialize">저장</button>
+      <button @click="closeComment">닫기</button>
+    </div>
+    <br>
+    <br>
+    <div>{{ content }}</div>
+    <br>
+    <div class="memoBox" v-if="selectedComment">
+      <span>선택문장 : {{ selectedComment.sentence }}</span>
+      <br>
+      <span>메모 : {{ selectedComment.comment }}</span>
     </div>
   </div>
 </template>
 
 <script>
 import loadScriptOnce from "load-script-once";
+import api from "./api";
 import TextHighlighter from "./th";
 export default {
   data() {
@@ -52,16 +60,34 @@ export default {
       isSelect: false,
       position: null,
       useComment: false,
+      content_original: "",
       content: "",
+      comment: "",
+      comments: null,
+      selectedComment: null,
       highlight: ""
     };
   },
   mounted() {
-    const el = document.querySelector("#main-content2");
+    api.get("/memo").then(response => {
+      this.content_original = `<p>동해물과 백두산이 마르고 닳도록</p>
+      <p>하느님이 보우하사 우리나라 만세</p>
+      <ul>
+        <li>동해물과 백두산이 마르고 닳도록</li>
+        <li>하느님이 보우하사 우리나라 만세</li>
+        <li>동해물과 백두산이 마르고 닳도록</li>
+        <li>하느님이 보우하사 우리나라 만세</li>
+      </ul>`;
+      this.content = response.content;
+      this.comments = response.comments;
 
-    el.addEventListener("mousedown", this.reset, false);
-
-    el.addEventListener("mouseup", this.dragEvent, false);
+      this.$nextTick(() => {
+        this.eventBind();
+        const el = document.querySelector("#main-content2");
+        el.addEventListener("mousedown", this.reset, false);
+        el.addEventListener("mouseup", this.dragEvent, false);
+      });
+    });
   },
   destroyed() {
     const el = document.querySelector("#main-content2");
@@ -70,27 +96,73 @@ export default {
     el.removeEventListener("mouseup", this.dragEvent, false);
   },
   methods: {
-    saveComment(content, selectRange, selectText) {
+    openComment(selectRange, selectText) {
       const highlight = new TextHighlighter()
         .removeHighlight()
         .highlight(selectRange);
       this.useComment = true;
-      this.isSelect = false;
-      this.position = null;
+      this.reset();
       this.highlight = highlight;
     },
     resetHighlight() {
+      // 현재 선택된 영역 highlight 제거
       new TextHighlighter().removeHighlight();
     },
     desirialize() {
-      new TextHighlighter()
-        .removeHighlight()
-        .deserializeHighlights(this.highlight, this.uniqID());
+      this.resetHighlight();
+      const key = this.uniqID();
+      new TextHighlighter().deserializeHighlights(this.highlight, key);
+      const content = document.querySelector("#main-content2").innerHTML;
+      this.saveComment(content, this.selectText, this.comment, key);
+      this.reset();
+      // 선택 영역 초기화
+      this.selectRange = null;
+      this.useComment = false;
+      this.comment = "";
+    },
+    saveComment(content, sentence, comment, key) {
+      const comments = Object.assign({}, this.comments ? this.comments : {}, {
+        [key]: {
+          sentence,
+          comment
+        }
+      });
+
+      api.set("/memo", { content, comments }).then(() => {
+        this.content = content;
+        this.comments = comments;
+        this.$nextTick(() => {
+          this.eventBind();
+        });
+      });
+    },
+    closeComment() {
+      this.useComment = false;
+      this.reset();
+    },
+    eventBind() {
+      const container = document.querySelector("#main-content2");
+      const els = container.querySelectorAll(".inline-comment-marker");
+      for (let i = 0; i < els.length; i++) {
+        els[i].removeEventListener("click", this.clickHiglight);
+        const key = els[i].getAttribute("data-ref");
+        els[i].addEventListener(
+          "click",
+          this.clickHiglight.bind(null, key),
+          false
+        );
+      }
+    },
+    clickHiglight(key) {
+      if (this.comments[key]) {
+        this.selectedComment = this.comments[key];
+      }
     },
     reset() {
+      if (!this.useComment) this.resetHighlight();
+      this.selectedComment = null;
       this.position = null;
       this.isSelect = true;
-      this.selectRange = null;
     },
     dragEvent() {
       if (!this.isSelect) {
@@ -137,5 +209,23 @@ export default {
 }
 .inline-comment-marker {
   background-color: #eaa;
+  cursor: pointer;
+}
+.memoBox {
+  background-color: #eee;
+  width: 400px;
+  height: 400px;
+  position: absolute;
+  right: 0px;
+  top: 200px;
+}
+.commentBox {
+  background-color: #eee;
+  border: 1px solid #000;
+  width: 400px;
+  height: 400px;
+  position: absolute;
+  right: 0px;
+  top: 100px;
 }
 </style>
