@@ -37,8 +37,11 @@
       />
       <!-- App > {{ this.files }} -->
     </div>
-    <div>
+    <div v-if="false">
       <MemoDocument/>
+    </div>
+    <div>
+      <MemoDocumentTest/>
     </div>
     <br>
     <button @click="handleOnChange">test</button>
@@ -49,6 +52,7 @@
 import Summernote from "./Summernote";
 import FileUploader from "multi-file-uploader";
 import MemoDocument from "./MemoDocument";
+import MemoDocumentTest from "./MemoDocumentTest";
 export default {
   name: "app",
   data() {
@@ -270,7 +274,8 @@ export default {
   components: {
     Summernote,
     FileUploader,
-    MemoDocument
+    MemoDocument,
+    MemoDocumentTest
   }
 };
 </script>

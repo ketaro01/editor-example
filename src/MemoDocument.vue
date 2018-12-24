@@ -104,6 +104,7 @@ export default {
       // 현재 선택된 영역 highlight 제거
       new TextHighlighter().removeHighlight();
     },
+    // highlight 처리
     desirialize() {
       this.resetHighlight();
       const key = this.uniqID();
@@ -143,6 +144,18 @@ export default {
         const textNode = document.createTextNode(els[i].textContent);
         els[i].parentNode.replaceChild(textNode, els[i]);
       }
+
+      this.$delete(this.comments, key);
+
+      api
+        .set("/memo", { content: container.innerHTML, comments: this.comments })
+        .then(() => {
+          this.content = container.innerHTML;
+          this.selectedComment = null;
+          this.$nextTick(() => {
+            this.eventBind();
+          });
+        });
     },
     eventBind() {
       const container = document.querySelector("#main-content2");
