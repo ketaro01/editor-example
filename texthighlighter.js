@@ -100,6 +100,7 @@ function refineRangeBoundaries(range) {
   } else if (range.endOffset > 0) {
     endContainer = endContainer.childNodes.item(range.endOffset - 1);
   }
+
   if (startContainer.nodeType === NODE_TYPE.TEXT_NODE) {
     if (range.startOffset === startContainer.nodeValue.length) {
       goDeeper = false;
@@ -534,7 +535,7 @@ TextHighlighter.prototype.highlightRange = function(range, wrapper) {
     highlight,
     wrapperClone,
     nodeParent;
-  console.log(startContainer, endContainer);
+
   do {
     if (goDeeper && node.nodeType === NODE_TYPE.TEXT_NODE) {
       if (
@@ -716,9 +717,9 @@ TextHighlighter.prototype.getColor = function() {
  * @param {HTMLElement} [element] - element to remove highlights from
  * @memberof TextHighlighter
  */
-TextHighlighter.prototype.removeHighlights = function(element) {
+TextHighlighter.prototype.removeHighlights = function(element, className) {
   var container = element || this.el,
-    highlights = this.getHighlights({ container: container }),
+    highlights = this.getHighlights({ container: container }, className),
     self = this;
 
   function mergeSiblingTextNodes(textNode) {
@@ -765,19 +766,17 @@ TextHighlighter.prototype.removeHighlights = function(element) {
  * @returns {Array} - array of highlights.
  * @memberof TextHighlighter
  */
-TextHighlighter.prototype.getHighlights = function(params) {
+TextHighlighter.prototype.getHighlights = function(params, className) {
   params = defaults(params, {
     container: this.el,
     andSelf: true,
     grouped: false
   });
-
-  var nodeList = params.container.querySelectorAll(
-      `.${this.options.highlightedClass}`
-    ),
+  const chkClassName = className || this.options.highlightedClass;
+  var nodeList = params.container.querySelectorAll(`.${chkClassName}`),
     highlights = Array.prototype.slice.call(nodeList);
 
-  const regex = new RegExp(`^(${this.options.highlightedClass})$`);
+  const regex = new RegExp(`^(${chkClassName})$`);
 
   if (params.andSelf === true && params.container.className.match(regex)) {
     highlights.push(params.container);
@@ -808,6 +807,7 @@ TextHighlighter.prototype.isHighlight = function(el) {
  * @returns {string} - stringified JSON with highlights definition
  * @memberof TextHighlighter
  */
+
 TextHighlighter.prototype.serializeHighlights = function(highlights) {
   var $highlights = highlights || this.getHighlights,
     refEl = this.el,
@@ -856,6 +856,54 @@ TextHighlighter.prototype.serializeHighlights = function(highlights) {
   return JSON.stringify(hlDescriptors);
 };
 
+TextHighlighter.prototype.serializeHighlightsAll = function(className) {
+  var highlights = this.getHighlights(undefined, className),
+    refEl = this.el,
+    hlDescriptors = [];
+
+  function getElementPath(el, refElement) {
+    var path = [],
+      childNodes;
+
+    do {
+      childNodes = Array.prototype.slice.call(el.parentNode.childNodes);
+      path.unshift(childNodes.indexOf(el));
+      el = el.parentNode;
+    } while (el !== refElement || !el);
+
+    return path;
+  }
+
+  sortByDepth(highlights, false);
+
+  highlights.forEach(function(highlight) {
+    var offset = 0, // Hl offset from previous sibling within parent node.
+      length = highlight.textContent.length,
+      hlPath = getElementPath(highlight, refEl),
+      wrapper = highlight.cloneNode(true);
+
+    wrapper.innerHTML = "";
+    wrapper = wrapper.outerHTML;
+
+    if (
+      highlight.previousSibling &&
+      highlight.previousSibling.nodeType === NODE_TYPE.TEXT_NODE
+    ) {
+      offset = highlight.previousSibling.length;
+    }
+
+    hlDescriptors.push([
+      wrapper,
+      highlight.textContent,
+      hlPath.join(":"),
+      offset,
+      length
+    ]);
+  });
+
+  return JSON.stringify(hlDescriptors);
+};
+
 /**
  * Deserializes highlights.
  * @throws exception when can't parse JSON or JSON has invalid structure.
@@ -863,7 +911,7 @@ TextHighlighter.prototype.serializeHighlights = function(highlights) {
  * @returns {Array} - array of deserialized highlights.
  * @memberof TextHighlighter
  */
-TextHighlighter.prototype.deserializeHighlights = function(json) {
+TextHighlighter.prototype.deserializeHighlights = function(json, wrapper) {
   var hlDescriptors,
     highlights = [],
     self = this;
@@ -880,7 +928,7 @@ TextHighlighter.prototype.deserializeHighlights = function(json) {
 
   function deserializationFn(hlDescriptor) {
     var hl = {
-        wrapper: hlDescriptor[0],
+        wrapper: wrapper || hlDescriptor[0],
         text: hlDescriptor[1],
         path: hlDescriptor[2].split(":"),
         offset: hlDescriptor[3],
@@ -891,7 +939,6 @@ TextHighlighter.prototype.deserializeHighlights = function(json) {
       hlNode,
       highlight,
       idx;
-    console.log(hl);
     while (!!(idx = hl.path.shift())) {
       node = node.childNodes[idx];
     }
@@ -902,8 +949,8 @@ TextHighlighter.prototype.deserializeHighlights = function(json) {
     ) {
       elIndex -= 1;
     }
-
     node = node.childNodes[elIndex];
+    node.normalize();
     hlNode = node.splitText(hl.offset);
     hlNode.splitText(hl.length);
 
