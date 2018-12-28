@@ -4,7 +4,7 @@ const CURRENT_SELECTOR = "current-selection";
 const MARKING_INLINE = "inline-comment-marker";
 
 class Highlighter {
-  constructor() {
+  constructor(useOnlyHighlight) {
     // createWrapper 재정의
     TextHighlighter.createWrapper = options => {
       return this.htmlWrapper(
@@ -20,10 +20,12 @@ class Highlighter {
         highlightedClass: CURRENT_SELECTOR
       });
     }
+    this.useOnlyHighlight = !!useOnlyHighlight;
     this.highlight = this.highlight.bind(this);
     this.removeHighlight = this.removeHighlight.bind(this);
     this.removeHighlightOne = this.removeHighlightOne.bind(this);
   }
+
   // HTML TEXT 를 nodeElement 로 생성
   htmlWrapper(html, options) {
     const template = document.createElement("template");
@@ -34,12 +36,21 @@ class Highlighter {
   }
 
   // 선택된 range 영역을 highlight
-  highlight(range) {
+  highlight(range, markerRef) {
     if (this.el.length === 0) {
       return;
     }
 
     const $highlightNodes = this.el.doHighlight(range);
+
+    // highlight mode & set markerRef
+    if (this.useOnlyHighlight && markerRef) {
+      const serialize = this.el.serializeHighlights($highlightNodes);
+      return this.removeHighlight().deserializeHighlights(serialize, markerRef);
+    }
+
+    if (this.useOnlyHighlight)
+      return this.el.serializeHighlightsAll(CURRENT_SELECTOR);
 
     return this.el.serializeHighlights($highlightNodes);
   }
@@ -79,7 +90,7 @@ class Highlighter {
     );
 
     // 필터링된 변경점이 없는 경우. 현재값 반환.
-    if (serialize.length !== serializeFilter.length) return nowSerialize;
+    if (serialize.length === serializeFilter.length) return nowSerialize;
 
     const filterdText = JSON.stringify(serializeFilter);
     this.removeHighlight(MARKING_INLINE);

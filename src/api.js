@@ -4,6 +4,8 @@ const getItem = key =>
 const setItem = (key, value) =>
   localStorage.setItem(key, JSON.stringify(value));
 
+const deleteAllItem = key => localStorage.removeItem(key);
+
 // 비동기처리 테스트
 const api = {
   get: url => {
@@ -19,6 +21,16 @@ const api = {
     return new Promise(resolve => {
       setTimeout(() => {
         setItem(key, params);
+        resolve(true);
+      }, 100);
+    });
+  },
+  delete: url => {
+    const [key, param] = url.slice(1).split("/");
+
+    return new Promise(resolve => {
+      setTimeout(() => {
+        if (!param) deleteAllItem(key);
         resolve(true);
       }, 100);
     });

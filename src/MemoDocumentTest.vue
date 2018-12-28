@@ -15,9 +15,18 @@
     </div>
     <button @click="selectHighlight">영역선택</button>
     <button @click="removeHighlight">제거</button>
-    <button @click="() => { this.removeHighlightOne('uf52v8724'); }">1요소제거</button>
     <button @click="deserialize">디시리얼라이즈</button>
-    {{ this.highlight }}
+    <br>
+    <br>
+    <input type="text" v-model="inputKey">
+    <button @click="() => { this.removeHighlightOne(this.inputKey); }">요소제거</button>
+    <br>
+    <input type="text" v-model="inputSerializeText" style="width:400px;">
+    <button @click="() => { this.loadHighlight(this.inputSerializeText) }">디시리얼라이즈 반영</button>
+    <div>
+      <h3>저장된 내용</h3>
+      <div>{{ this.serialize }}</div>
+    </div>
   </div>
 </template>
 
@@ -28,7 +37,9 @@ export default {
     return {
       highlight: "",
       selectRange: null,
-      serialize: `[["<span class=\'inline-comment-marker\' data-ref=\'9qcln72k1\'></span>"," 백두산이 마르고 닳도록","4:0:1",4,13],["<span class=\'inline-comment-marker\' data-ref=\'9qcln72k1\'></span>","하느님이 보","4:2:0",0,6],["<span class=\'inline-comment-marker\' data-ref=\'uf52v8724\'></span>","하느님이 보우하사 우리나","4:6:0",0,13]]`
+      serialize: `[["<span class=\'inline-comment-marker\' data-ref=\'9qcln72k1\'></span>"," 백두산이 마르고 닳도록","4:0:1",4,13],["<span class=\'inline-comment-marker\' data-ref=\'9qcln72k1\'></span>","하느님이 보","4:2:0",0,6],["<span class=\'inline-comment-marker\' data-ref=\'uf52v8724\'></span>","하느님이 보우하사 우리나","4:6:0",0,13]]`,
+      inputSerializeText: "",
+      inputKey: "uf52v8724"
     };
   },
   mounted() {
@@ -52,8 +63,12 @@ export default {
         console.log(e.message);
       }
     },
-    loadHighlight() {
-      new Highlighter().removeHighlight().deserializeHighlights(this.serialize);
+    loadHighlight(text) {
+      const serialize = text || this.serialize;
+
+      this.serialize = new Highlighter()
+        .removeHighlight("inline-comment-marker")
+        .deserializeHighlights(serialize);
     },
     getRange() {
       const sel = window.getSelection();
@@ -66,8 +81,8 @@ export default {
       new Highlighter().removeHighlight();
     },
     removeHighlightOne(key) {
-      console.log(key);
       this.serialize = new Highlighter().removeHighlightOne(key);
+      console.log(key, JSON.parse(this.serialize));
     },
     selectHighlight() {
       if (!this.selectRange) return;

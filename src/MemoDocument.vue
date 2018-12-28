@@ -38,7 +38,7 @@
 <script>
 import loadScriptOnce from "load-script-once";
 import api from "./api";
-import TextHighlighter from "./th";
+import TextHighlighter from "../jquery-texthighlighter";
 export default {
   data() {
     return {

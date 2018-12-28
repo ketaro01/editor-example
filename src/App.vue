@@ -40,11 +40,18 @@
     <div v-if="false">
       <MemoDocument/>
     </div>
-    <div>
+    <div id="memo" v-if="true">
       <MemoDocumentTest/>
     </div>
+    <div v-if="false">
+      <Highlighter/>
+    </div>
     <br>
-    <button @click="handleOnChange">test</button>
+    <button @click="getHtml">test</button>
+    <div>
+      <h3>html 적용</h3>
+      <div v-html="html"></div>
+    </div>
   </div>
 </template>
 
@@ -53,6 +60,8 @@ import Summernote from "./Summernote";
 import FileUploader from "multi-file-uploader";
 import MemoDocument from "./MemoDocument";
 import MemoDocumentTest from "./MemoDocumentTest";
+import Highlighter from "./Highlighter";
+
 export default {
   name: "app",
   data() {
@@ -64,7 +73,8 @@ export default {
         save: [],
         input: []
       },
-      isSelect: false
+      isSelect: false,
+      html: ""
     };
   },
   mounted() {
@@ -226,6 +236,10 @@ export default {
           console.log(err);
         });
     },
+    getHtml() {
+      const el = document.querySelector("#memo");
+      this.html = el.innerHTML;
+    },
     handleOnChangeEditor(e) {
       const value = e.target.innerHTML;
       this.content = value;
@@ -275,7 +289,8 @@ export default {
     Summernote,
     FileUploader,
     MemoDocument,
-    MemoDocumentTest
+    MemoDocumentTest,
+    Highlighter
   }
 };
 </script>

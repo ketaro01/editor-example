@@ -1,6 +1,6 @@
 /* eslint @atlassian/confluence-es6/matching-tests:0 */
 import $ from "jquery";
-import textHighlighter from "../jquery.texthighlighter.js"; // eslint-disable-line no-unused-vars
+import textHighlighter from "./jquery.texthighlighter.js"; // eslint-disable-line no-unused-vars
 
 /*
  * A wrapped version of jquery highlighter plugin with customizations
