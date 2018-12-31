@@ -40,12 +40,16 @@
     <div v-if="false">
       <MemoDocument/>
     </div>
-    <div id="memo" v-if="true">
+    <div id="memo" v-if="false">
       <MemoDocumentTest/>
     </div>
     <div v-if="false">
       <Highlighter/>
     </div>
+    <div v-if="true">
+      <HtmlCreator/>
+    </div>
+
     <br>
     <button @click="getHtml">test</button>
     <div>
@@ -61,7 +65,7 @@ import FileUploader from "multi-file-uploader";
 import MemoDocument from "./MemoDocument";
 import MemoDocumentTest from "./MemoDocumentTest";
 import Highlighter from "./Highlighter";
-
+import HtmlCreator from "./HtmlCreator";
 export default {
   name: "app",
   data() {
@@ -290,7 +294,8 @@ export default {
     FileUploader,
     MemoDocument,
     MemoDocumentTest,
-    Highlighter
+    Highlighter,
+    HtmlCreator
   }
 };
 </script>
