@@ -279,7 +279,6 @@ export default {
   height: 100%;
   opacity: 0;
   cursor: pointer;
-  position: absolute;
 }
 .file_list ul {
   margin: 10px;

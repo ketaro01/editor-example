@@ -1,5 +1,8 @@
 <template>
   <div>
+    <div style="position:fixed; top: 0px; width: 100%;">
+      <div style="background-color:#aaa; height: 5px; width: 0px;" id="progress"></div>
+    </div>
     <h3>HTML CREATOR</h3>
     <div v-show="true" id="htmlBox">
       <div id="m1"></div>
@@ -55,6 +58,19 @@ export default {
     };
   },
   mounted() {
+    document.addEventListener("scroll", e => {
+      const progress = document.querySelector("#progress");
+      const h = document.documentElement,
+        b = document.body,
+        st = "scrollTop",
+        sh = "scrollHeight";
+
+      const percent =
+        ((h[st] || b[st]) / ((h[sh] || b[sh]) - h.clientHeight)) * 100;
+
+      progress.style.width = percent + "%";
+    });
+
     this.createHtmlPage(mojipData);
   },
   methods: {
@@ -161,5 +177,9 @@ export default {
 p {
   margin: 0;
   white-space: pre-wrap;
+}
+body {
+  margin: 0px;
+  padding: 0px;
 }
 </style>

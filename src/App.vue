@@ -14,7 +14,7 @@
       <textarea name="secontents" id="secontents" v-model="content" style="display:none;"></textarea>
       입력된 내용 {{ content }}
     </div>
-    <div v-if="false">
+    <div v-if="true">
       <!-- 파일 업로드 -->
       <!-- 
         * 추가
@@ -46,13 +46,13 @@
     <div v-if="false">
       <Highlighter/>
     </div>
-    <div v-if="true">
+    <div v-if="false">
       <HtmlCreator/>
     </div>
 
     <br>
     <button @click="getHtml">test</button>
-    <div>
+    <div v-if="false">
       <h3>html 적용</h3>
       <div v-html="html"></div>
     </div>
@@ -61,7 +61,7 @@
 
 <script>
 import Summernote from "./Summernote";
-import FileUploader from "multi-file-uploader";
+import FileUploader from "./MultiFileUploader";
 import MemoDocument from "./MemoDocument";
 import MemoDocumentTest from "./MemoDocumentTest";
 import Highlighter from "./Highlighter";
